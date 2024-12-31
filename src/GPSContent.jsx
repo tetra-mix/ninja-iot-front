@@ -1,13 +1,17 @@
 import { useState, useEffect, useRef } from "react"
 import { Box, Flex, Heading, Text, Button } from "@yamada-ui/react"
 import { RelayServer } from "https://chirimen.org/remote-connection/js/beta/RelayServer.js";
+import { gsap } from 'gsap'
+import { TextPlugin } from 'gsap/TextPlugin'
+
 
 export const GPSContent = () => {
     const [latitude, setLatitude] = useState(0);
     const [longitude, setLongitude] = useState(0);
     const [error, setError] = useState(null);
     const [message, setMessage] = useState("");
-    const [detectStatus, setDetectStatus ] = useState("たぶんいない");
+    
+    const detectStatus = useRef("たぶんいない");
     const channelRef = useRef(null);
 
     const init = async () => {
@@ -24,15 +28,20 @@ export const GPSContent = () => {
 
     const randomDetectStatus = () => {
         const rand = Math.floor(Math.random() * 4);
-        if(rand == 0){
-            setDetectStatus("そんなん知らん")
-        }else if(rand == 1){
-            setDetectStatus("たぶんいない")
-        }else if(rand == 2){
-            setDetectStatus("いそう！");
-        }else if(rand == 3){
-            setDetectStatus("ここにいる！")
+        NumToDetext(rand);
+    }
+
+    const NumToDetext = (num) => {
+        if(num == 0){
+            detectStatus.current = "そんなん知らん"
+        }else if(num == 1){
+            detectStatus.current = "たぶんいない"
+        }else if(num == 2){
+            detectStatus.current = "いるっぽい！"
+        }else if(num == 3){
+            detectStatus.current = "ここにいる！"
         }
+        setAnimation();
     }
 
     const getMessage = (msg) => {
@@ -66,10 +75,22 @@ export const GPSContent = () => {
             }
         );
     };
+    
+    const setAnimation = () => {
+        gsap.to(".detect", {
+            duration: 2, //アニメーション時間（秒）
+            text: {
+                value: detectStatus.current.toString(), //表示するテキスト
+                delimiter: "",  //区切り文字
+            },
+            ease: "ease",  // アニメーションのタイミング・進行割合を指定する
+        })
+    }
 
     useEffect(() => {
         init();
-
+        gsap.registerPlugin(TextPlugin);
+        setAnimation();
         const interval = setInterval(() => {
             getLocation();
         }, 1000);
@@ -79,12 +100,9 @@ export const GPSContent = () => {
         }
     }, []);
 
-
     return (
         <Box>
-            <Heading fontFamily={"DotGothic16"} as="h2" p={16}>
-                {detectStatus}
-            </Heading>
+            <Heading className="detect" fontFamily={"DotGothic16"} as="h2" p={16}></Heading>
             <Flex w="full" gap="md">
                 <Button colorScheme={"secondary"} onClick={() => { sendMessage("LED ON"); }}>LEDを光らせる</Button>
                 <Button colorScheme={"secondary"} onClick={() => { randomDetectStatus(); }}>ランダム</Button>
