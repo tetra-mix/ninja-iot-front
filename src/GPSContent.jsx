@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { Box, Flex, Heading, Text, Button } from "@yamada-ui/react"
+import { Box, Flex, Heading, Text, Button, Center } from "@yamada-ui/react"
 import { RelayServer } from "https://chirimen.org/remote-connection/js/beta/RelayServer.js";
 import { gsap } from 'gsap'
 import { TextPlugin } from 'gsap/TextPlugin'
@@ -22,7 +22,7 @@ export const GPSContent = () => {
             channelRef.current = channel; // useRefに保存
             channel.onmessage = getMessage;
         } catch (err) {
-            setError("Failed to initialize channel");
+            setError("チャンネルの初期化に失敗しました");
             console.error(err);
         }
     };
@@ -41,10 +41,10 @@ export const GPSContent = () => {
             setDetectColor("warning.200");
         } else if (num == 2) {
             detectStatus.current = "いるっぽい！";
-            setDetectColor("sky.200");
+            setDetectColor("success.200");
         } else if (num == 3) {
             detectStatus.current = "ここにいる！";
-            setDetectColor("blue.200");
+            setDetectColor("primary.200");
         }
         if (typeof navigator !== "undefined" && "vibrate" in navigator) {
             navigator.vibrate(200);
@@ -62,14 +62,14 @@ export const GPSContent = () => {
             channelRef.current.send(data); // 現在のchannelにデータを送信
             console.log("SEND:" + data);
         } else {
-            setError("Channel is not initialized")
+            setError("接続チャンネルが初期化されていません")
             console.error("Channel is not initialized");
         }
     };
 
     const getLocation = () => {
         if (!navigator.geolocation) {
-            setError('Geolocation is not supported by your browser.');
+            setError('ブラウザで位置情報の許可をしてください。');
             return;
         }
         navigator.geolocation.getCurrentPosition(
@@ -119,8 +119,10 @@ export const GPSContent = () => {
             <Box>
                 <Text>{message}</Text>
             </Box>
-            <Box text="lg" pt={16}>
-                <Text pb="2" text="2xl" fontWeight={"bolder"}>端末状態</Text>
+            <Box text="lg" mt={16} p={4} borderRadius={"2xl"} border={"solid"} borderColor="success.500">
+                <Center>
+                    <Text pb="2" text="xl" fontWeight={"bolder"}>端末状態</Text>
+                </Center>
                 <Text pt="2" text="xl" fontWeight={"bolder"}>現在地</Text>
                 <Flex w="full" gap="md">
                     <Text >緯度:{latitude.toString()}</Text>
@@ -129,7 +131,7 @@ export const GPSContent = () => {
                 <Text pt="2" text="xl" fontWeight={"bolder"}>動作状況</Text>
                 {
                     error == null ?
-                        <Text color="blue.500">正常</Text>
+                        <Text color="blue.300">正常</Text>
                         :
                         <Text color="red.500">{error}</Text>
                 }
