@@ -46,10 +46,14 @@ export const GPSContent = () => {
             detectStatus.current = "ここにいる！";
             setDetectColor("primary.200");
         }
-        if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-            navigator.vibrate(200);
-        }
+
+        navigator.vibrate(200);
         setAnimation();
+    }
+
+    const FloatToString = (num) => {
+        const rounded = parseFloat(num.toFixed(5));
+        return rounded.toString();
     }
 
     const getMessage = (msg) => {
@@ -110,7 +114,9 @@ export const GPSContent = () => {
 
     return (
         <Box>
-            <Heading color={detectColor} className="detect" fontFamily={"DotGothic16"} as="h2" p={16}></Heading>
+            <Center pt="4" pb="8">
+                <Text color={detectColor} className="detect" fontFamily={"DotGothic16"} text={"5xl"} fontWeight={"bold"}></Text>
+            </Center>
             <Flex w="full" gap="md">
                 <Button colorScheme={"secondary"} onClick={() => { sendMessage("LED ON"); }}>LEDを光らせる</Button>
                 <Button colorScheme={"secondary"} onClick={() => { randomDetectStatus(); }}>ランダム</Button>
@@ -125,8 +131,8 @@ export const GPSContent = () => {
                 </Center>
                 <Text pt="2" text="xl" fontWeight={"bolder"}>現在地</Text>
                 <Flex w="full" gap="md">
-                    <Text >緯度:{latitude.toString()}</Text>
-                    <Text >軽度:{longitude.toString()}</Text>
+                    <Text >緯度:{FloatToString(latitude)}</Text>
+                    <Text >軽度:{FloatToString(longitude)}</Text>
                 </Flex>
                 <Text pt="2" text="xl" fontWeight={"bolder"}>動作状況</Text>
                 {

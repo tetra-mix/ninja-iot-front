@@ -1,6 +1,6 @@
 import { useState, useLayoutEffect } from 'react'
-import { Container, Box, Center, Button, Heading, useColorMode, Loading } from "@yamada-ui/react"
-import { GPSContent } from './GPSContent';
+import { Container, Button, useColorMode, } from "@yamada-ui/react"
+import { GPSContent } from './contents/GPSContent';
 import { LoadView } from './atom/LoadView';
 import { Header } from './atom/Header';
 import { Footer } from './atom/Footer';
