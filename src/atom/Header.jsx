@@ -1,10 +1,10 @@
-import { Container, Center, Heading } from "@yamada-ui/react";
+import { Container, Center,Text } from "@yamada-ui/react";
 
 export const Header = () => {
     return (
         <Container borderBottom="solid" borderBottomColor={"primary.500"} >
             <Center>
-                <Heading fontFamily={"DotGothic16"} colorScheme={"primary"} as="h1" text="3xl">プレイヤー検知システム</Heading>
+                <Text fontFamily={"DotGothic16"} fontWeight={"bold"} colorScheme={"primary"} as="h1" text="2xl">プレイヤー検知システム</Text>
             </Center>
         </Container>
     );

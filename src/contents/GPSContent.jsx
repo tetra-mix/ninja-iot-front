@@ -125,7 +125,7 @@ export const GPSContent = () => {
             <Box>
                 <Text>{message}</Text>
             </Box>
-            <Box text="lg" mt={16} p={4} borderRadius={"2xl"} border={"solid"} borderColor="success.500">
+            <Box text="lg" mt={8} p={4} borderRadius={"2xl"} border={"solid"} borderColor="success.500">
                 <Center>
                     <Text pb="2" text="xl" fontWeight={"bolder"}>端末状態</Text>
                 </Center>
