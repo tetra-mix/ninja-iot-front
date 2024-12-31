@@ -11,7 +11,7 @@ export const GPSContent = () => {
     const [error, setError] = useState(null);
     const [message, setMessage] = useState("");
 
-    const detectStatus = useRef("たぶんいない");
+    const [detectStatus, setDetectStatus] = useState("たぶんいない");
     const [detectColor, setDetectColor] = useState("warning.200");
     const channelRef = useRef(null);
 
@@ -34,16 +34,16 @@ export const GPSContent = () => {
 
     const NumToDetext = (num) => {
         if (num == 0) {
-            detectStatus.current = "そんなん知らん";
+            setDetectStatus("そんなん知らん");
             setDetectColor("danger.200");
         } else if (num == 1) {
-            detectStatus.current = "たぶんいない";
+            setDetectStatus("たぶんいない");
             setDetectColor("warning.200");
         } else if (num == 2) {
-            detectStatus.current = "いるっぽい！";
+            setDetectStatus("いるっぽい！");
             setDetectColor("success.200");
         } else if (num == 3) {
-            detectStatus.current = "ここにいる！";
+            setDetectStatus("ここにいる！");
             setDetectColor("primary.200");
         }
 
@@ -92,7 +92,7 @@ export const GPSContent = () => {
         gsap.to(".detect", {
             duration: 2, //アニメーション時間（秒）
             text: {
-                value: detectStatus.current.toString(), //表示するテキスト
+                value: detectStatus.toString(), //表示するテキスト
                 delimiter: "",  //区切り文字
             },
             ease: "ease",  // アニメーションのタイミング・進行割合を指定する
@@ -111,6 +111,7 @@ export const GPSContent = () => {
             clearInterval(interval);
         }
     }, []);
+
 
     return (
         <Box>
