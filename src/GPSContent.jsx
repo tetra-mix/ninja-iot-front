@@ -10,8 +10,9 @@ export const GPSContent = () => {
     const [longitude, setLongitude] = useState(0);
     const [error, setError] = useState(null);
     const [message, setMessage] = useState("");
-    
+
     const detectStatus = useRef("たぶんいない");
+    const [detectColor, setDetectColor] = useState("warning.200");
     const channelRef = useRef(null);
 
     const init = async () => {
@@ -32,14 +33,21 @@ export const GPSContent = () => {
     }
 
     const NumToDetext = (num) => {
-        if(num == 0){
-            detectStatus.current = "そんなん知らん"
-        }else if(num == 1){
-            detectStatus.current = "たぶんいない"
-        }else if(num == 2){
-            detectStatus.current = "いるっぽい！"
-        }else if(num == 3){
-            detectStatus.current = "ここにいる！"
+        if (num == 0) {
+            detectStatus.current = "そんなん知らん";
+            setDetectColor("danger.200");
+        } else if (num == 1) {
+            detectStatus.current = "たぶんいない";
+            setDetectColor("warning.200");
+        } else if (num == 2) {
+            detectStatus.current = "いるっぽい！";
+            setDetectColor("sky.200");
+        } else if (num == 3) {
+            detectStatus.current = "ここにいる！";
+            setDetectColor("blue.200");
+        }
+        if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+            navigator.vibrate(200);
         }
         setAnimation();
     }
@@ -75,7 +83,7 @@ export const GPSContent = () => {
             }
         );
     };
-    
+
     const setAnimation = () => {
         gsap.to(".detect", {
             duration: 2, //アニメーション時間（秒）
@@ -102,7 +110,7 @@ export const GPSContent = () => {
 
     return (
         <Box>
-            <Heading className="detect" fontFamily={"DotGothic16"} as="h2" p={16}></Heading>
+            <Heading color={detectColor} className="detect" fontFamily={"DotGothic16"} as="h2" p={16}></Heading>
             <Flex w="full" gap="md">
                 <Button colorScheme={"secondary"} onClick={() => { sendMessage("LED ON"); }}>LEDを光らせる</Button>
                 <Button colorScheme={"secondary"} onClick={() => { randomDetectStatus(); }}>ランダム</Button>
