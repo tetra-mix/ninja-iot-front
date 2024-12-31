@@ -19,6 +19,7 @@ function injectScript(){
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/ninja-iot-front',
   plugins: [
     react(),
     env({ prefix: "VITE", mountedPath: "process.env" }),
