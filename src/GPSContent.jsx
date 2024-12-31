@@ -7,7 +7,7 @@ export const GPSContent = () => {
     const [longitude, setLongitude] = useState(0);
     const [error, setError] = useState(null);
     const [message, setMessage] = useState("");
-    const [detectStatus, setDetectStatus ] = useState("");
+    const [detectStatus, setDetectStatus ] = useState("たぶんいない");
     const channelRef = useRef(null);
 
     const init = async () => {
@@ -82,12 +82,13 @@ export const GPSContent = () => {
 
     return (
         <Box>
-            <Heading as="h2" p={16}>
+            <Heading fontFamily={"DotGothic16"} as="h2" p={16}>
                 {detectStatus}
             </Heading>
             <Flex w="full" gap="md">
-                <Button onClick={() => { sendMessage("LED ON"); }}>LEDを光らせる</Button>
-                <Button onClick={() => { randomDetectStatus(); }}>ランダム</Button>
+                <Button colorScheme={"secondary"} onClick={() => { sendMessage("LED ON"); }}>LEDを光らせる</Button>
+                <Button colorScheme={"secondary"} onClick={() => { randomDetectStatus(); }}>ランダム</Button>
+                <Button colorScheme={"secondary"} onClick={() => { window.location.reload(); }}>リセット</Button>
             </Flex>
             <Box>
                 <Text>{message}</Text>
