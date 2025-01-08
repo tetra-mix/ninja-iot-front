@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Box, Flex, Text, Button, Center } from "@yamada-ui/react"
 import { RelayServer } from "https://chirimen.org/remote-connection/js/beta/RelayServer.js";
-
+import { Geodesic } from "geographiclib";
 
 export const GPSContent = () => {
     const [latitude, setLatitude] = useState(0);
@@ -11,8 +11,10 @@ export const GPSContent = () => {
     const [detectStatus, setDetectStatus] = useState("たぶんいない");
     const [detectColor, setDetectColor] = useState("warning.200");
     const channelRef = useRef(null);
+    const webLatRef = useRef(0);
+    const webLngRef = useRef(0);
     const raspLatRef = useRef(0);
-    const raspLonRef = useRef(0);
+    const raspLngRef = useRef(0);
 
     const init = async () => {
         try {
@@ -26,9 +28,12 @@ export const GPSContent = () => {
         }
     };
 
+    
     const GPSDetect = () => {
-        const distance = calculateDistance() * 1000; // 距離をmに変換
-        console.log(distance);
+        console.log(webLatRef.current - raspLatRef.current);
+        console.log(webLngRef.current - raspLngRef.current);
+
+        const distance = calculateDistance(webLatRef.current, webLngRef.current, raspLatRef.current, raspLngRef.current);
         setMessage("距離:" + distance + "m");
 
         if (distance <= 10) {
@@ -42,27 +47,10 @@ export const GPSContent = () => {
         }
     }
 
-    const toRad = (value) => (parseFloat(value) * Math.PI) / 180; // 確実に数値へ変換しラジアンに変換
-
-    const calculateDistance = () => {
-    
-        if (isNaN(latitude) || isNaN(longitude) || isNaN(raspLatRef.current) || isNaN(raspLonRef.current)) {
-            throw new Error("緯度や経度が無効な値です。数値を渡してください。");
-        }
-
-        const dLat = toRad(Math.abs(latitude - raspLatRef.current));
-        const dLng = toRad(Math.abs(longitude - raspLonRef.current));
-
-        const R = 6371; // 地球の半径（km）
-
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(toRad(latitude)) *
-            Math.cos(toRad(raspLatRef.current)) *
-            Math.sin(dLng / 2) *
-            Math.sin(dLng / 2);
-        
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c; // 距離を返す（m）
+    const calculateDistance = (lat1, lng1, lat2, lng2) => {
+        const geod = Geodesic.WGS84; // WGS84楕円体を使用
+        const result = geod.Inverse(lat1, lng1, lat2, lng2); // 2地点間の情報を計算
+        return result.s12; // 距離（メートル単位）
     };
 
     const randomDetectStatus = () => {
@@ -108,7 +96,7 @@ export const GPSContent = () => {
             //console.log(msg.data.lat);
             //console.log(msg.data.lon);
             raspLatRef.current = msg.data.lat;
-            raspLonRef.current = msg.data.lon;
+            raspLngRef.current = msg.data.lon;
         }
     }
 
@@ -131,6 +119,8 @@ export const GPSContent = () => {
             (position) => {
                 setLatitude(position.coords.latitude);
                 setLongitude(position.coords.longitude);
+                webLatRef.current = position.coords.latitude;
+                webLngRef.current = position.coords.longitude;
                 setError(null);
             },
             (err) => {
