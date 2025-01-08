@@ -28,21 +28,23 @@ export const GPSContent = () => {
         }
     };
 
-    
+
     const GPSDetect = () => {
         console.log(webLatRef.current - raspLatRef.current);
         console.log(webLngRef.current - raspLngRef.current);
 
         const distance = calculateDistance(webLatRef.current, webLngRef.current, raspLatRef.current, raspLngRef.current);
-        setMessage("距離:" + distance + "m");
-
-        if (distance <= 10) {
+        const except = (100 - distance * 4).toFixed(2);
+        setMessage("期待値: " + except + " %");
+        if (distance <= 1) {
+            NumToDetect(4);
+        }else if (distance <= 4) {
             NumToDetect(3);
-        } else if (distance <= 15) {
+        } else if (distance <= 8) {
             NumToDetect(2);
-        } else if (distance <= 30) {
+        } else if (distance <= 15) {
             NumToDetect(1);
-        } else{
+        } else {
             NumToDetect(0);
         }
     }
@@ -73,6 +75,9 @@ export const GPSContent = () => {
             setDetectColor("success.200");
         } else if (num == 3) {
             setDetectStatus("ここにいる！");
+            setDetectColor("primary.200");
+        } else if (num == 4){
+            setDetectStatus("絶対にいる！");
             setDetectColor("primary.200");
         }
 
@@ -145,18 +150,15 @@ export const GPSContent = () => {
 
     return (
         <Box>
-            <Center pt="4" pb="8">
-                <Text color={detectColor} className="detect" fontFamily={"DotGothic16"} text={"5xl"} fontWeight={"bold"}>{detectStatus}</Text>
-            </Center>
-            <Flex w="full" gap="md">
-                <Button colorScheme={"secondary"} onClick={() => { sendMessage("GET GPS"); }}>GPSを取得</Button>
-                <Button colorScheme={"secondary"} onClick={() => { randomDetectStatus(); }}>ランダム</Button>
-                <Button colorScheme={"secondary"} onClick={() => { window.location.reload(); }}>リセット</Button>
-            </Flex>
-            <Box>
-                <Text text="md">{message}</Text>
+            <Box pt="4" pb="4">
+                <Center>
+                    <Text color={detectColor} className="detect" fontFamily={"DotGothic16"} text={"5xl"} fontWeight={"bold"}>{detectStatus}</Text>
+                </Center>
+                <Center>
+                    <Text text="md">{message}</Text>
+                </Center>
             </Box>
-            <Box text="lg" mt={8} p={4} borderRadius={"2xl"} border={"solid"} borderColor="success.500">
+            <Box text="lg" mt={4} p={4} borderRadius={"2xl"} border={"solid"} borderColor="success.500">
                 <Center>
                     <Text pb="2" text="xl" fontWeight={"bolder"}>端末状態</Text>
                 </Center>
@@ -173,7 +175,9 @@ export const GPSContent = () => {
                         <Text color="red.500">{error}</Text>
                 }
             </Box>
-
+            <Flex mt="4" w="full" gap="md" align="center" justify="center">
+                <Button colorScheme={"secondary"} onClick={() => { window.location.reload(); }}>リセット</Button>
+            </Flex>
         </Box>
     );
 }
