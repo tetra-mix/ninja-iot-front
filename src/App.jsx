@@ -7,7 +7,7 @@ import { Header } from './atom/Header';
 import { Footer } from './atom/Footer';
 
 function App() {
-  const { colorMode, changeColorMode, toggleColorMode } = useColorMode()
+  const { colorMode, changeColorMode} = useColorMode()
   const [flag, setFlag] = useState(0);
 
   const loadingEvent = () => {
@@ -17,6 +17,7 @@ function App() {
 
   useLayoutEffect(() => {
     changeColorMode("dark");
+    console.log(colorMode);
   }, []);
 
   return (

@@ -1,17 +1,18 @@
 import { useState, useEffect, useRef } from "react"
-import { Box, Flex, Heading, Text, Button, Center } from "@yamada-ui/react"
+import { Box, Flex, Text, Button, Center } from "@yamada-ui/react"
 import { RelayServer } from "https://chirimen.org/remote-connection/js/beta/RelayServer.js";
 
 
 export const GPSContent = () => {
     const [latitude, setLatitude] = useState(0);
     const [longitude, setLongitude] = useState(0);
-    const [error, setError] = useState(null);
     const [message, setMessage] = useState("");
-
+    const [error, setError] = useState(null);
     const [detectStatus, setDetectStatus] = useState("たぶんいない");
     const [detectColor, setDetectColor] = useState("warning.200");
     const channelRef = useRef(null);
+    const raspLatRef = useRef(0);
+    const raspLonRef = useRef(0);
 
     const init = async () => {
         try {
@@ -25,12 +26,54 @@ export const GPSContent = () => {
         }
     };
 
-    const randomDetectStatus = () => {
-        const rand = Math.floor(Math.random() * 4);
-        NumToDetext(rand);
+    const GPSDetect = () => {
+        const distance = calculateDistance() * 1000; // 距離をmに変換
+        console.log(distance);
+        setMessage("距離:" + distance + "m");
+
+        if (distance <= 10) {
+            NumToDetect(3);
+        } else if (distance <= 15) {
+            NumToDetect(2);
+        } else if (distance <= 30) {
+            NumToDetect(1);
+        } else{
+            NumToDetect(0);
+        }
     }
 
-    const NumToDetext = (num) => {
+    const toRad = (value) => (parseFloat(value) * Math.PI) / 180; // 確実に数値へ変換しラジアンに変換
+
+    const calculateDistance = () => {
+    
+        if (isNaN(latitude) || isNaN(longitude) || isNaN(raspLatRef.current) || isNaN(raspLonRef.current)) {
+            throw new Error("緯度や経度が無効な値です。数値を渡してください。");
+        }
+
+        const dLat = toRad(Math.abs(latitude - raspLatRef.current));
+        const dLng = toRad(Math.abs(longitude - raspLonRef.current));
+
+        const R = 6371; // 地球の半径（km）
+
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(latitude)) *
+            Math.cos(toRad(raspLatRef.current)) *
+            Math.sin(dLng / 2) *
+            Math.sin(dLng / 2);
+        
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // 距離を返す（m）
+    };
+
+    const randomDetectStatus = () => {
+        const rand = Math.floor(Math.random() * 4);
+        console.log(rand);
+
+        setDetectStatus(NumToDetect(rand));
+        NumToDetect(rand);
+    }
+
+    const NumToDetect = (num) => {
         if (num == 0) {
             setDetectStatus("そんなん知らん");
             setDetectColor("danger.200");
@@ -53,14 +96,20 @@ export const GPSContent = () => {
         navigator.vibrate(200);
     }
 
+
     const FloatToString = (num) => {
         const rounded = parseFloat(num.toFixed(5));
         return rounded.toString();
     }
 
     const getMessage = (msg) => {
-        console.log(msg);
-        setMessage(msg.data.toString());
+        //console.log(msg.data);
+        if (msg.data.lat) {
+            //console.log(msg.data.lat);
+            //console.log(msg.data.lon);
+            raspLatRef.current = msg.data.lat;
+            raspLonRef.current = msg.data.lon;
+        }
     }
 
     const sendMessage = (data) => {
@@ -93,8 +142,10 @@ export const GPSContent = () => {
     useEffect(() => {
         init();
         const interval = setInterval(() => {
+            sendMessage("GET GPS");
             getLocation();
-        }, 1000);
+            GPSDetect();
+        }, 5000);
 
         return () => {
             clearInterval(interval);
@@ -108,12 +159,12 @@ export const GPSContent = () => {
                 <Text color={detectColor} className="detect" fontFamily={"DotGothic16"} text={"5xl"} fontWeight={"bold"}>{detectStatus}</Text>
             </Center>
             <Flex w="full" gap="md">
-                <Button colorScheme={"secondary"} onClick={() => { sendMessage("LED ON"); }}>LEDを光らせる</Button>
+                <Button colorScheme={"secondary"} onClick={() => { sendMessage("GET GPS"); }}>GPSを取得</Button>
                 <Button colorScheme={"secondary"} onClick={() => { randomDetectStatus(); }}>ランダム</Button>
                 <Button colorScheme={"secondary"} onClick={() => { window.location.reload(); }}>リセット</Button>
             </Flex>
             <Box>
-                <Text>{message}</Text>
+                <Text text="md">{message}</Text>
             </Box>
             <Box text="lg" mt={8} p={4} borderRadius={"2xl"} border={"solid"} borderColor="success.500">
                 <Center>

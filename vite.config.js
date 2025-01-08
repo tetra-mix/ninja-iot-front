@@ -8,7 +8,7 @@ import { defaultConfig, getColorModeScript } from "@yamada-ui/react";
 function injectScript(){
   return {
     name: "vite-plugin-inject-scripts",
-    transformIndexHtml(html, ctx) {
+    transformIndexHtml(html) {
       const content = getColorModeScript({
         initialColorMode: defaultConfig.initialColorMode,
       });

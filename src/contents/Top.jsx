@@ -1,4 +1,4 @@
-import { Center, Button, Text, Box, DiscList, For, ListItem } from "@yamada-ui/react";
+import { Center, Text, Box, DiscList, For, ListItem } from "@yamada-ui/react";
 
 export const Top = ({children}) => {
     return (
