@@ -5,6 +5,7 @@ import { Top } from './contents/Top';
 import { LoadView } from './atom/LoadView';
 import { Header } from './atom/Header';
 import { Footer } from './atom/Footer';
+import BluetoothBeacon from './contents/BeaconTest';
 
 function App() {
   const { colorMode, changeColorMode} = useColorMode()
@@ -34,6 +35,7 @@ function App() {
           flag == 2 ? <GPSContent /> : <></>
         }
       </Container>
+      <BluetoothBeacon />
       <Footer />
     </>
   )
