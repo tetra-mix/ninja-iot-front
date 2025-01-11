@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Button, Box, Text, Container, Center, Flex } from "@yamada-ui/react";
+import { useState, useEffect } from 'react';
+import { Button, Box, Text, Container,Center, Flex } from "@yamada-ui/react";
 const BluetoothBeacon = () => {
     const [beaconData, setBeaconData] = useState(null);
     const [distance, setDistance] = useState(null);
@@ -23,9 +23,8 @@ const BluetoothBeacon = () => {
     const startScan = async () => {
         try {
             const device = await navigator.bluetooth.requestDevice({
-                filters: [{ services: ['battery_service'] }],
-                optionalServices: ['0000feaa-0000-1000-8000-00805f9b34fb'], // iBeaconのサービスUUID
-            });
+                acceptAllDevices: true, // フィルタリングなしで全てのデバイスを選択
+              });
 
             device.addEventListener('advertisementreceived', (event) => {
                 // iBeaconのデータを取得（RSSIも含まれる）
@@ -50,7 +49,7 @@ const BluetoothBeacon = () => {
                 <Button onClick={startScan} colorScheme={"primary"}>iBeaconをスキャン</Button>
             </Flex>
             <Box mt="4">
-                {beaconData ? (
+            {beaconData ? (
                     <Box>
                         <Text>RSSI: {beaconData.rssi} dBm</Text>
                         <Text>推定距離: {distance ? `${distance.toFixed(2)} メートル` : '計測中'}</Text>
@@ -58,7 +57,7 @@ const BluetoothBeacon = () => {
                 ) : (
                     <Text>iBeaconをスキャン中...</Text>
                 )}
-            </Box>
+                </Box>
         </Container>
     );
 };
