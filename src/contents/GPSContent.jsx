@@ -37,19 +37,17 @@ export const GPSContent = () => {
         console.log(sinobiLat);
         console.log(sinobiLng);
 
-        const deltaLat = Math.abs(oniLat - sinobiLat);
-        const deltaLng = Math.abs(oniLng - sinobiLng);
-
+        const distance = getDistance(oniLat, oniLng, sinobiLat, sinobiLng);
         const info = calculate(oniLat, oniLng, sinobiLat, sinobiLng);
 
-        setMessage("距離: " + info.s12 + " m");
-        if (info.s12 <= 10) {
+        setMessage("距離: " + distance + " m");
+        if (distance <= 10) {
             NumToDetect(4);
-        } else if (info.s12 <= 20) {
+        } else if (distance <= 20) {
             NumToDetect(3);
-        } else if (info.s12 <= 30) {
+        } else if (distance <= 30) {
             NumToDetect(2);
-        } else if (info.s12 <= 40) {
+        } else if (distance <= 40) {
             NumToDetect(1);
         } else {
             NumToDetect(0);
@@ -57,6 +55,13 @@ export const GPSContent = () => {
 
         const relativeHeading = (headdingRef.current - info.azi1 + 360) % 360;
         setDirection(relativeHeading)
+    }
+
+    function getDistance(latitude0,longitude0, latitude1,longitude1){
+        var difLatM = (latitude1-latitude0) * 40000000 / 360;
+        var difLngM = Math.cos(latitude0) * (longitude1-longitude0)* 40000000 / 360;
+        var distance = Math.sqrt(difLatM * difLatM + difLngM * difLngM);
+        return distance; // in meter
     }
 
     const calculate = (lat1, lng1, lat2, lng2) => {
@@ -238,14 +243,14 @@ export const GPSContent = () => {
         init();
         const interval = setInterval(() => {
             //sendMessage("GET GPS");
-            getLocation();
+            //getLocation();
             GPSDetect();
 
-        }, 10000);
+        }, 4000);
 
         const handleOrientation = (event) => {
             const alpha = event.alpha; // 0〜360°: デバイスの真北からの角度
-            oniDegree.current = alpha;
+            headdingRef.current = alpha;
             if (alpha !== null) {
                 headdingRef.current = alpha;
             } else {
