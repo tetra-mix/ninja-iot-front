@@ -38,8 +38,8 @@ export const GPSContent = () => {
         console.log(webLngRef.current - raspLngRef.current);
 
         const distance = calculateDistance(webLatRef.current, webLngRef.current, raspLatRef.current, raspLngRef.current);
-        const except = (100 - distance * 4).toFixed(2);
-        setMessage("期待値: " + except + " %");
+
+        setMessage("距離: " + except + " m");
         if (distance <= 1) {
             NumToDetect(4);
         } else if (distance <= 4) {
@@ -102,12 +102,25 @@ export const GPSContent = () => {
     const getMessage = (msg) => {
         //console.log(msg.data);
         if (msg.data.lat) {
-            //console.log(msg.data.lat);
-            //console.log(msg.data.lon);
             raspLatRef.current = msg.data.lat;
+        }
+        if(msg.data.lng){
             raspLngRef.current = msg.data.lon;
+        }
+        if(msg.data.course){
             raspDegree.current = msg.data.course;
         }
+        
+        if(msg.data == "WAZA"){
+
+        }
+        if(msg.data == "SAFE"){
+
+        }
+        if(msg.data == "DANGER"){
+
+        }
+
     }
 
     const sendMessage = (data) => {
