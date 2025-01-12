@@ -203,7 +203,7 @@ export const GPSContent = () => {
             getLocation();
             GPSDetect();
 
-        }, 5000);
+        }, 10000);
 
         const handleOrientation = (event) => {
             const alpha = event.alpha; // 0〜360°: デバイスの真北からの角度
