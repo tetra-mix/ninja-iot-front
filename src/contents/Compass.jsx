@@ -1,9 +1,7 @@
 import React from 'react';
 import { Box, VStack } from '@yamada-ui/react';
 
-const Compass = ({ webHeading, targetHeading }) => {
-
-    const relativeHeading = (targetHeading - webHeading + 360) % 360;
+const Compass = ({ direction }) => {
 
     return (
         <VStack spacing="4" align="center" pt="6">
@@ -24,7 +22,7 @@ const Compass = ({ webHeading, targetHeading }) => {
                     position="absolute"
                     top="50%"
                     left="50%"
-                    transform={`translate(-50%, -100%) rotate(${relativeHeading}deg)`}
+                    transform={`translate(-50%, -100%) rotate(${direction}deg)`}
                     transformOrigin="bottom"
                     borderRadius="md"
                 />

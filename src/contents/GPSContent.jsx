@@ -183,11 +183,6 @@ export const GPSContent = () => {
         };
     }, []);
 
-
-    useEffect(() => {
-
-    }, []);
-
     return (
         <Box>
             <Box pt="4" pb="4">
