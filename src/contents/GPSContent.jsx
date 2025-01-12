@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { Box, Flex, Text, Button, Center } from "@yamada-ui/react"
 import { RelayServer } from "https://chirimen.org/remote-connection/js/beta/RelayServer.js";
 import { Geodesic } from "geographiclib";
+import Compass from "./Compass";
 
 export const GPSContent = () => {
     const [latitude, setLatitude] = useState(0);
@@ -10,11 +11,14 @@ export const GPSContent = () => {
     const [error, setError] = useState(null);
     const [detectStatus, setDetectStatus] = useState("たぶんいない");
     const [detectColor, setDetectColor] = useState("warning.200");
+    const [direction, setDirection] = useState(0);
     const channelRef = useRef(null);
     const webLatRef = useRef(0);
     const webLngRef = useRef(0);
     const raspLatRef = useRef(0);
     const raspLngRef = useRef(0);
+    const raspDegree = useRef(0);
+    const webDegree =  useRef(0);
 
     const init = async () => {
         try {
@@ -38,7 +42,7 @@ export const GPSContent = () => {
         setMessage("期待値: " + except + " %");
         if (distance <= 1) {
             NumToDetect(4);
-        }else if (distance <= 4) {
+        } else if (distance <= 4) {
             NumToDetect(3);
         } else if (distance <= 8) {
             NumToDetect(2);
@@ -76,7 +80,7 @@ export const GPSContent = () => {
         } else if (num == 3) {
             setDetectStatus("ここにいる！");
             setDetectColor("primary.200");
-        } else if (num == 4){
+        } else if (num == 4) {
             setDetectStatus("絶対にいる！");
             setDetectColor("primary.200");
         }
@@ -102,6 +106,7 @@ export const GPSContent = () => {
             //console.log(msg.data.lon);
             raspLatRef.current = msg.data.lat;
             raspLngRef.current = msg.data.lon;
+            raspDegree.current = msg.data.course;
         }
     }
 
@@ -140,13 +145,31 @@ export const GPSContent = () => {
             sendMessage("GET GPS");
             getLocation();
             GPSDetect();
+            const relativeHeading = (webDegree.current - raspDegree.current + 360) % 360;
+            setDirection(relativeHeading)
         }, 5000);
+
+        const handleOrientation = (event) => {
+            const { alpha } = event; // デバイスの回転角度（真北を基準にした角度）
+            webDegree.current = alpha;
+        };
+
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', handleOrientation, true);
+        } else {
+            console.error('DeviceOrientation API is not supported on this device.');
+        }
 
         return () => {
             clearInterval(interval);
-        }
+            window.removeEventListener('deviceorientation', handleOrientation);
+        };
     }, []);
 
+
+    useEffect(() => {
+        
+    }, []);
 
     return (
         <Box>
@@ -157,6 +180,8 @@ export const GPSContent = () => {
                 <Center>
                     <Text text="md">{message}</Text>
                 </Center>
+                <Compass direction={direction} />
+                <Text>{direction}</Text>
             </Box>
             <Box text="lg" mt={4} p={4} borderRadius={"2xl"} border={"solid"} borderColor="success.500">
                 <Center>
