@@ -18,7 +18,7 @@ export const GPSContent = () => {
     const raspLatRef = useRef(0);
     const raspLngRef = useRef(0);
     const raspDegree = useRef(0);
-    const webDegree =  useRef(0);
+    const webDegree = useRef(0);
 
     const init = async () => {
         try {
@@ -150,15 +150,32 @@ export const GPSContent = () => {
         }, 5000);
 
         const handleOrientation = (event) => {
-            const { alpha } = event; // デバイスの回転角度（真北を基準にした角度）
+            const alpha = event.alpha; // 0〜360°: デバイスの真北からの角度
             webDegree.current = alpha;
-        };
-
-        if (window.DeviceOrientationEvent) {
+            if (alpha !== null) {
+              setHeading(alpha);
+            } else {
+              setError('方位センサーがサポートされていません。');
+            }
+          };
+      
+          if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // iOS 14以上の場合は許可をリクエスト
+            DeviceOrientationEvent.requestPermission()
+              .then((permissionState) => {
+                if (permissionState === 'granted') {
+                  window.addEventListener('deviceorientation', handleOrientation, true);
+                } else {
+                  setError('センサーのアクセス許可が必要です。');
+                }
+              })
+              .catch((error) => {
+                setError('アクセスのリクエストに失敗しました。');
+              });
+          } else {
+            // iOS 13以下の場合、または許可が不要な場合
             window.addEventListener('deviceorientation', handleOrientation, true);
-        } else {
-            console.error('DeviceOrientation API is not supported on this device.');
-        }
+          }
 
         return () => {
             clearInterval(interval);
@@ -168,7 +185,7 @@ export const GPSContent = () => {
 
 
     useEffect(() => {
-        
+
     }, []);
 
     return (
