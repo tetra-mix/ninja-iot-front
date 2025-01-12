@@ -34,12 +34,13 @@ export const GPSContent = () => {
 
 
     const GPSDetect = () => {
-        console.log(webLatRef.current - raspLatRef.current);
-        console.log(webLngRef.current - raspLngRef.current);
-
+        console.log(webLatRef.current);
+        console.log(webLngRef.current);
+        console.log(raspLatRef.current);
+        console.log(raspLngRef.current);
         const distance = calculateDistance(webLatRef.current, webLngRef.current, raspLatRef.current, raspLngRef.current);
 
-        setMessage("距離: " + except + " m");
+        setMessage("距離: " + distance + " m");
         if (distance <= 1) {
             NumToDetect(4);
         } else if (distance <= 4) {
@@ -100,11 +101,11 @@ export const GPSContent = () => {
     }
 
     const getMessage = (msg) => {
-        //console.log(msg.data);
+        console.log(msg.data);
         if (msg.data.lat) {
             raspLatRef.current = msg.data.lat;
         }
-        if(msg.data.lng){
+        if(msg.data.lon){
             raspLngRef.current = msg.data.lon;
         }
         if(msg.data.course){
