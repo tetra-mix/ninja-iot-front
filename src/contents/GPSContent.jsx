@@ -109,7 +109,7 @@ export const GPSContent = () => {
         console.log(msg.data);
 
         if (msg.data.role){
-            if(msg.data.role == "SINOBi"){
+            if(msg.data.role == "sinobi"){
                 setSinobiLat(msg.data.lat);
                 setSinobiLng(msg.data.lon);
             }else if(msg.data.role == "oni"){
