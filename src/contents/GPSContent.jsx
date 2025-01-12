@@ -12,6 +12,7 @@ export const GPSContent = () => {
     const [detectStatus, setDetectStatus] = useState("たぶんいない");
     const [detectColor, setDetectColor] = useState("warning.200");
     const [direction, setDirection] = useState(0);
+    const [stopFunction, setStopFunction] = useState(null); // 停止用関数
     const channelRef = useRef(null);
     const webLatRef = useRef(0);
     const webLngRef = useRef(0);
@@ -112,13 +113,13 @@ export const GPSContent = () => {
         }
 
         if (msg.data == "WAZA") {
-
+            
         }
         if (msg.data == "SAFE") {
-            startSpinning();
+            handleStart();
         }
         if (msg.data == "DANGER") {
-
+            handleStop();
         }
 
     }
@@ -138,28 +139,43 @@ export const GPSContent = () => {
         const rotationSpeed = 500; // 1回転にかかる時間（ms）
         const startTime = Date.now();
         let intervalId;
-        setError("忍が影分身の術を使いました")
-    
+
         // アニメーションを開始
         const runAnimation = () => {
-          intervalId = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            if (elapsed >= duration) {
-              clearInterval(intervalId); // 30秒経過で停止
-              setError(null);
-              return;
-            }
-            const newAngle = (elapsed / rotationSpeed) * 360; // 回転角度計算
-            setDirection(newAngle % 360); // 360度でループ
-          }, 16); // 更新間隔（16ms ≈ 60fps）
+            intervalId = setInterval(() => {
+                setError("忍が影分身の術を使いました");
+                const elapsed = Date.now() - startTime;
+                if (elapsed >= duration) {
+                    clearInterval(intervalId); // 30秒経過で停止
+                    setError(null);
+                    return;
+                }
+                const newAngle = (elapsed / rotationSpeed) * 360; // 回転角度計算
+                setDirection(newAngle % 360); // 360度でループ
+            }, 16); // 更新間隔（16ms ≈ 60fps）
         };
-    
+
         // アニメーションを実行
         runAnimation();
-    
+
         // 停止用の関数を返す
         return () => clearInterval(intervalId);
-      };
+    };
+
+    const handleStart = () => {
+        if (stopFunction) {
+            stopFunction(); // 既存の回転を停止
+        }
+        const stop = startSpinning(); // 新しい回転を開始
+        setStopFunction(() => stop); // 停止用関数を保存
+    };
+
+    const handleStop = () => {
+        if (stopFunction) {
+            stopFunction(); // 現在の回転を停止
+            setStopFunction(null); // 停止関数をリセット
+        }
+    };
 
     const getLocation = () => {
         if (!navigator.geolocation) {
@@ -253,7 +269,8 @@ export const GPSContent = () => {
             </Box>
             <Flex mt="4" w="full" gap="md" align="center" justify="center">
                 <Button colorScheme={"secondary"} onClick={() => { window.location.reload(); }}>リセット</Button>
-                <Button colorScheme={"secondary"} onClick={() => { startSpinning(); }}>ぐるぐる</Button>
+                <Button colorScheme={"secondary"} onClick={() => { handleStart(); }}>ぐるぐる</Button>
+                <Button colorScheme={"secondary"} onClick={() => { handleStop(); }}>ストップ</Button>
             </Flex>
         </Box>
     );
