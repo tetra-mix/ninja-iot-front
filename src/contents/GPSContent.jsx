@@ -113,7 +113,7 @@ export const GPSContent = () => {
         }
 
         if (msg.data == "WAZA") {
-            
+
         }
         if (msg.data == "SAFE") {
             handleStart();
@@ -250,7 +250,7 @@ export const GPSContent = () => {
                 </Center>
                 <Compass direction={direction} />
             </Box>
-            <Box text="lg" mt={4} p={4} borderRadius={"2xl"} border={"solid"} borderColor="success.500">
+            <Box text="lg" mt={2} p={4} borderRadius={"2xl"} border={"solid"} borderColor="success.500">
                 <Center>
                     <Text pb="2" text="xl" fontWeight={"bolder"}>端末状態</Text>
                 </Center>
@@ -269,8 +269,6 @@ export const GPSContent = () => {
             </Box>
             <Flex mt="4" w="full" gap="md" align="center" justify="center">
                 <Button colorScheme={"secondary"} onClick={() => { window.location.reload(); }}>リセット</Button>
-                <Button colorScheme={"secondary"} onClick={() => { handleStart(); }}>ぐるぐる</Button>
-                <Button colorScheme={"secondary"} onClick={() => { handleStop(); }}>ストップ</Button>
             </Flex>
         </Box>
     );
