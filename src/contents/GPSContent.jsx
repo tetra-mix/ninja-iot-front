@@ -5,20 +5,18 @@ import { Geodesic } from "geographiclib";
 import Compass from "./Compass";
 
 export const GPSContent = () => {
-    const [latitude, setLatitude] = useState(0);
-    const [longitude, setLongitude] = useState(0);
     const [message, setMessage] = useState("");
     const [error, setError] = useState(null);
     const [detectStatus, setDetectStatus] = useState("たぶんいない");
     const [detectColor, setDetectColor] = useState("warning.200");
     const [direction, setDirection] = useState(0);
+    const [stopFunction, setStopFunction] = useState(null); // 停止用関数
+    const [oniLat, setOniLat] = useState(0);
+    const [oniLng, setOniLng] = useState(0);
+    const [sinobiLat, setSinobiLat] = useState(0);
+    const [sinobiLng, setSinobiLng] = useState(0);
+    const headdingRef = useRef(0);
     const channelRef = useRef(null);
-    const webLatRef = useRef(0);
-    const webLngRef = useRef(0);
-    const raspLatRef = useRef(0);
-    const raspLngRef = useRef(0);
-    const raspDegree = useRef(0);
-    const webDegree = useRef(0);
 
     const init = async () => {
         try {
@@ -34,30 +32,42 @@ export const GPSContent = () => {
 
 
     const GPSDetect = () => {
-        console.log(webLatRef.current);
-        console.log(webLngRef.current);
-        console.log(raspLatRef.current);
-        console.log(raspLngRef.current);
-        const distance = calculateDistance(webLatRef.current, webLngRef.current, raspLatRef.current, raspLngRef.current);
+        console.log(oniLat);
+        console.log(oniLng);
+        console.log(sinobiLat);
+        console.log(sinobiLng);
+
+        const distance = getDistance(oniLat, oniLng, sinobiLat, sinobiLng);
+        const info = calculate(oniLat, oniLng, sinobiLat, sinobiLng);
 
         setMessage("距離: " + distance + " m");
-        if (distance <= 1) {
+        if (distance <= 10) {
             NumToDetect(4);
-        } else if (distance <= 4) {
+        } else if (distance <= 20) {
             NumToDetect(3);
-        } else if (distance <= 8) {
+        } else if (distance <= 30) {
             NumToDetect(2);
-        } else if (distance <= 15) {
+        } else if (distance <= 40) {
             NumToDetect(1);
         } else {
             NumToDetect(0);
         }
+
+        const relativeHeading = (headdingRef.current - info.azi1 + 360) % 360;
+        setDirection(relativeHeading)
     }
 
-    const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    function getDistance(latitude0,longitude0, latitude1,longitude1){
+        var difLatM = (latitude1-latitude0) * 40000000 / 360;
+        var difLngM = Math.cos(latitude0) * (longitude1-longitude0)* 40000000 / 360;
+        var distance = Math.sqrt(difLatM * difLatM + difLngM * difLngM);
+        return distance; // in meter
+    }
+
+    const calculate = (lat1, lng1, lat2, lng2) => {
         const geod = Geodesic.WGS84; // WGS84楕円体を使用
         const result = geod.Inverse(lat1, lng1, lat2, lng2); // 2地点間の情報を計算
-        return result.s12; // 距離（メートル単位）
+        return result; // 距離（メートル単位）
     };
 
     const randomDetectStatus = () => {
@@ -102,38 +112,114 @@ export const GPSContent = () => {
 
     const getMessage = (msg) => {
         console.log(msg.data);
-        if (msg.data.lat) {
-            raspLatRef.current = msg.data.lat;
-        }
-        if(msg.data.lon){
-            raspLngRef.current = msg.data.lon;
-        }
-        if(msg.data.course){
-            raspDegree.current = msg.data.course;
-        }
-        
-        if(msg.data == "WAZA"){
 
+        if (msg.data.role){
+            if(msg.data.role == "sinobi"){
+                setSinobiLat(msg.data.lat);
+                setSinobiLng(msg.data.lon);
+            }else if(msg.data.role == "oni"){
+                setOniLat(msg.data.lat);
+                setOniLng(msg.data.lon);
+            }
         }
-        if(msg.data == "SAFE"){
 
+        if (msg.data == "WAZA") {
+            wazaStart();
         }
-        if(msg.data == "DANGER"){
-
+        if (msg.data == "SAFE") {
+            handleStart();
+        }
+        if (msg.data == "DANGER") {
+            handleStop();
         }
 
     }
-
+    
+    /*
     const sendMessage = (data) => {
-        if (channelRef.current) {
-            channelRef.current.send(data); // 現在のchannelにデータを送信
+        if (channel) {
+            channel.send(data); // 現在のchannelにデータを送信
             console.log("SEND:" + data);
         } else {
             setError("接続チャンネルが初期化されていません")
             console.error("Channel is not initialized");
         }
     };
+    */
 
+    const startSpinning = () => {
+        const duration = 30 * 1000; // 30秒
+        const rotationSpeed = 500; // 1回転にかかる時間（ms）
+        const startTime = Date.now();
+        let intervalId;
+
+        // アニメーションを開始
+        const runAnimation = () => {
+            intervalId = setInterval(() => {
+                setError("忍が隠れ身の術を使いました");
+                const elapsed = Date.now() - startTime;
+                if (elapsed >= duration) {
+                    clearInterval(intervalId); // 30秒経過で停止
+                    setError(null);
+                    return;
+                }
+                const newAngle = (elapsed / rotationSpeed) * 360; // 回転角度計算
+                setDirection(newAngle % 360); // 360度でループ
+            }, 16); // 更新間隔（16ms ≈ 60fps）
+        };
+
+        // アニメーションを実行
+        runAnimation();
+
+        // 停止用の関数を返す
+        return () => clearInterval(intervalId);
+    };
+
+    const wazaStart = () => {
+        const duration = 30 * 1000; // 30秒
+        const rotationSpeed = 500; // 1回転にかかる時間（ms）
+        const startTime = Date.now();
+        let intervalId;
+
+        // アニメーションを開始
+        const runAnimation = () => {
+            intervalId = setInterval(() => {
+                randomDetectStatus();
+                setError("忍が分身の術を使いました");
+                const elapsed = Date.now() - startTime;
+                if (elapsed >= duration) {
+                    clearInterval(intervalId); // 30秒経過で停止
+                    setError(null);
+                    return;
+                }
+                const newAngle = (elapsed / rotationSpeed) * 360; // 回転角度計算
+                setDirection(newAngle % 360); // 360度でループ
+            }, 32); // 更新間隔（16ms ≈ 60fps）
+        };
+
+        // アニメーションを実行
+        runAnimation();
+
+        // 停止用の関数を返す
+        return () => clearInterval(intervalId);
+    }
+
+    const handleStart = () => {
+        if (stopFunction) {
+            stopFunction(); // 既存の回転を停止
+        }
+        const stop = startSpinning(); // 新しい回転を開始
+        setStopFunction(() => stop); // 停止用関数を保存
+    };
+
+    const handleStop = () => {
+        if (stopFunction) {
+            stopFunction(); // 現在の回転を停止
+            setStopFunction(null); // 停止関数をリセット
+        }
+    };
+
+    /*
     const getLocation = () => {
         if (!navigator.geolocation) {
             setError('ブラウザで位置情報の許可をしてください。');
@@ -143,53 +229,52 @@ export const GPSContent = () => {
             (position) => {
                 setLatitude(position.coords.latitude);
                 setLongitude(position.coords.longitude);
-                webLatRef.current = position.coords.latitude;
-                webLngRef.current = position.coords.longitude;
+                oniLat = position.coords.latitude;
+                oniLng = position.coords.longitude;
                 setError(null);
             },
             (err) => {
                 setError(`Error: ${err.message}`);
             }
         );
-    };
+    };*/
 
     useEffect(() => {
         init();
         const interval = setInterval(() => {
-            sendMessage("GET GPS");
-            getLocation();
+            //sendMessage("GET GPS");
+            //getLocation();
             GPSDetect();
-            const relativeHeading = (webDegree.current - raspDegree.current + 360) % 360;
-            setDirection(relativeHeading)
-        }, 5000);
+
+        }, 4000);
 
         const handleOrientation = (event) => {
             const alpha = event.alpha; // 0〜360°: デバイスの真北からの角度
-            webDegree.current = alpha;
+            headdingRef.current = alpha;
             if (alpha !== null) {
-              setHeading(alpha);
+                headdingRef.current = alpha;
             } else {
-              setError('方位センサーがサポートされていません。');
+                setError('方位センサーがサポートされていません。');
             }
-          };
-      
-          if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        };
+
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             // iOS 14以上の場合は許可をリクエスト
             DeviceOrientationEvent.requestPermission()
-              .then((permissionState) => {
-                if (permissionState === 'granted') {
-                  window.addEventListener('deviceorientation', handleOrientation, true);
-                } else {
-                  setError('センサーのアクセス許可が必要です。');
-                }
-              })
-              .catch((error) => {
-                setError('アクセスのリクエストに失敗しました。');
-              });
-          } else {
+                .then((permissionState) => {
+                    if (permissionState === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation, true);
+                    } else {
+                        setError('センサーのアクセス許可が必要です。');
+                    }
+                })
+                .catch((error) => {
+                    setError('アクセスのリクエストに失敗しました。');
+                });
+        } else {
             // iOS 13以下の場合、または許可が不要な場合
             window.addEventListener('deviceorientation', handleOrientation, true);
-          }
+        }
 
         return () => {
             clearInterval(interval);
@@ -207,16 +292,20 @@ export const GPSContent = () => {
                     <Text text="md">{message}</Text>
                 </Center>
                 <Compass direction={direction} />
-                <Text>{direction}</Text>
             </Box>
-            <Box text="lg" mt={4} p={4} borderRadius={"2xl"} border={"solid"} borderColor="success.500">
+            <Box text="lg" mt={2} p={4} borderRadius={"2xl"} border={"solid"} borderColor="success.500">
                 <Center>
                     <Text pb="2" text="xl" fontWeight={"bolder"}>端末状態</Text>
                 </Center>
-                <Text pt="2" text="xl" fontWeight={"bolder"}>現在地</Text>
-                <Flex w="full" gap="md">
-                    <Text >緯度:{FloatToString(latitude)}</Text>
-                    <Text >軽度:{FloatToString(longitude)}</Text>
+                <Flex w="full" gap="sm">
+                    <Text pr="4" text="xl" fontWeight={"bolder"}>鬼</Text>
+                    <Text >緯度:{FloatToString(oniLat)}</Text>
+                    <Text >経度:{FloatToString(oniLng)}</Text>
+                </Flex>
+                <Flex w="full" gap="sm">
+                    <Text pr="4" text="xl" fontWeight={"bolder"}>忍</Text>
+                    <Text >緯度:{FloatToString(sinobiLat)}</Text>
+                    <Text >経度:{FloatToString(sinobiLng)}</Text>
                 </Flex>
                 <Text pt="2" text="xl" fontWeight={"bolder"}>動作状況</Text>
                 {
