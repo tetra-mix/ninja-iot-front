@@ -189,7 +189,7 @@ export const GPSContent = () => {
                 }
                 const newAngle = (elapsed / rotationSpeed) * 360; // 回転角度計算
                 setDirection(newAngle % 360); // 360度でループ
-            }, 16); // 更新間隔（16ms ≈ 60fps）
+            }, 32); // 更新間隔（16ms ≈ 60fps）
         };
 
         // アニメーションを実行
@@ -292,12 +292,15 @@ export const GPSContent = () => {
                 <Center>
                     <Text pb="2" text="xl" fontWeight={"bolder"}>端末状態</Text>
                 </Center>
-                <Text pt="2" text="xl" fontWeight={"bolder"}>鬼</Text>
                 <Flex w="full" gap="sm">
-                    <Text >鬼の緯度:{FloatToString(oniLat)}</Text>
-                    <Text >鬼の経度:{FloatToString(oniLng)}</Text>
-                    <Text >忍の緯度:{FloatToString(sinobiLat)}</Text>
-                    <Text >忍の経度:{FloatToString(sinobiLng)}</Text>
+                    <Text pr="4" text="xl" fontWeight={"bolder"}>鬼</Text>
+                    <Text >緯度:{FloatToString(oniLat)}</Text>
+                    <Text >経度:{FloatToString(oniLng)}</Text>
+                </Flex>
+                <Flex w="full" gap="sm">
+                    <Text pr="4" text="xl" fontWeight={"bolder"}>忍</Text>
+                    <Text >緯度:{FloatToString(sinobiLat)}</Text>
+                    <Text >経度:{FloatToString(sinobiLng)}</Text>
                 </Flex>
                 <Text pt="2" text="xl" fontWeight={"bolder"}>動作状況</Text>
                 {
@@ -310,7 +313,6 @@ export const GPSContent = () => {
             <Flex mt="4" w="full" gap="md" align="center" justify="center">
                 <Button colorScheme={"secondary"} onClick={() => { window.location.reload(); }}>リセット</Button>
                 <Button colorScheme={"secondary"} onClick={() => { wazaStart() }}>影分身</Button>
-                
             </Flex>
         </Box>
     );
