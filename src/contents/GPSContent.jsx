@@ -17,7 +17,6 @@ export const GPSContent = () => {
     const webLngRef = useRef(0);
     const raspLatRef = useRef(0);
     const raspLngRef = useRef(0);
-    const raspDegree = useRef(0);
     const webDegree = useRef(0);
 
     const init = async () => {
@@ -38,26 +37,29 @@ export const GPSContent = () => {
         console.log(webLngRef.current);
         console.log(raspLatRef.current);
         console.log(raspLngRef.current);
-        const distance = calculateDistance(webLatRef.current, webLngRef.current, raspLatRef.current, raspLngRef.current);
+        const info = calculate(webLatRef.current, webLngRef.current, raspLatRef.current, raspLngRef.current);
 
-        setMessage("距離: " + distance + " m");
-        if (distance <= 1) {
+        setMessage("距離: " + info.s12 + " m");
+        if (info.s12 <= 10) {
             NumToDetect(4);
-        } else if (distance <= 4) {
+        } else if (info.s12 <= 20) {
             NumToDetect(3);
-        } else if (distance <= 8) {
+        } else if (info.s12 <= 30) {
             NumToDetect(2);
-        } else if (distance <= 15) {
+        } else if (info.s12 <= 40) {
             NumToDetect(1);
         } else {
             NumToDetect(0);
         }
+
+        const relativeHeading = (webDegree.current - info.azi1 + 360) % 360;
+        setDirection(relativeHeading)
     }
 
-    const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    const calculate = (lat1, lng1, lat2, lng2) => {
         const geod = Geodesic.WGS84; // WGS84楕円体を使用
         const result = geod.Inverse(lat1, lng1, lat2, lng2); // 2地点間の情報を計算
-        return result.s12; // 距離（メートル単位）
+        return result; // 距離（メートル単位）
     };
 
     const randomDetectStatus = () => {
@@ -105,20 +107,17 @@ export const GPSContent = () => {
         if (msg.data.lat) {
             raspLatRef.current = msg.data.lat;
         }
-        if(msg.data.lon){
+        if (msg.data.lon) {
             raspLngRef.current = msg.data.lon;
         }
-        if(msg.data.course){
-            raspDegree.current = msg.data.course;
-        }
-        
-        if(msg.data == "WAZA"){
+
+        if (msg.data == "WAZA") {
 
         }
-        if(msg.data == "SAFE"){
-
+        if (msg.data == "SAFE") {
+            startSpinning();
         }
-        if(msg.data == "DANGER"){
+        if (msg.data == "DANGER") {
 
         }
 
@@ -133,6 +132,34 @@ export const GPSContent = () => {
             console.error("Channel is not initialized");
         }
     };
+
+    const startSpinning = () => {
+        const duration = 30 * 1000; // 30秒
+        const rotationSpeed = 500; // 1回転にかかる時間（ms）
+        const startTime = Date.now();
+        let intervalId;
+        setError("忍が影分身の術を使いました")
+    
+        // アニメーションを開始
+        const runAnimation = () => {
+          intervalId = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            if (elapsed >= duration) {
+              clearInterval(intervalId); // 30秒経過で停止
+              setError(null);
+              return;
+            }
+            const newAngle = (elapsed / rotationSpeed) * 360; // 回転角度計算
+            setDirection(newAngle % 360); // 360度でループ
+          }, 16); // 更新間隔（16ms ≈ 60fps）
+        };
+    
+        // アニメーションを実行
+        runAnimation();
+    
+        // 停止用の関数を返す
+        return () => clearInterval(intervalId);
+      };
 
     const getLocation = () => {
         if (!navigator.geolocation) {
@@ -159,37 +186,36 @@ export const GPSContent = () => {
             sendMessage("GET GPS");
             getLocation();
             GPSDetect();
-            const relativeHeading = (webDegree.current - raspDegree.current + 360) % 360;
-            setDirection(relativeHeading)
+
         }, 5000);
 
         const handleOrientation = (event) => {
             const alpha = event.alpha; // 0〜360°: デバイスの真北からの角度
             webDegree.current = alpha;
             if (alpha !== null) {
-              setHeading(alpha);
+                setHeading(alpha);
             } else {
-              setError('方位センサーがサポートされていません。');
+                setError('方位センサーがサポートされていません。');
             }
-          };
-      
-          if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        };
+
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             // iOS 14以上の場合は許可をリクエスト
             DeviceOrientationEvent.requestPermission()
-              .then((permissionState) => {
-                if (permissionState === 'granted') {
-                  window.addEventListener('deviceorientation', handleOrientation, true);
-                } else {
-                  setError('センサーのアクセス許可が必要です。');
-                }
-              })
-              .catch((error) => {
-                setError('アクセスのリクエストに失敗しました。');
-              });
-          } else {
+                .then((permissionState) => {
+                    if (permissionState === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation, true);
+                    } else {
+                        setError('センサーのアクセス許可が必要です。');
+                    }
+                })
+                .catch((error) => {
+                    setError('アクセスのリクエストに失敗しました。');
+                });
+        } else {
             // iOS 13以下の場合、または許可が不要な場合
             window.addEventListener('deviceorientation', handleOrientation, true);
-          }
+        }
 
         return () => {
             clearInterval(interval);
@@ -207,7 +233,6 @@ export const GPSContent = () => {
                     <Text text="md">{message}</Text>
                 </Center>
                 <Compass direction={direction} />
-                <Text>{direction}</Text>
             </Box>
             <Box text="lg" mt={4} p={4} borderRadius={"2xl"} border={"solid"} borderColor="success.500">
                 <Center>
@@ -228,6 +253,7 @@ export const GPSContent = () => {
             </Box>
             <Flex mt="4" w="full" gap="md" align="center" justify="center">
                 <Button colorScheme={"secondary"} onClick={() => { window.location.reload(); }}>リセット</Button>
+                <Button colorScheme={"secondary"} onClick={() => { startSpinning(); }}>ぐるぐる</Button>
             </Flex>
         </Box>
     );
