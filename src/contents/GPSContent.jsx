@@ -312,7 +312,6 @@ export const GPSContent = () => {
             </Box>
             <Flex mt="4" w="full" gap="md" align="center" justify="center">
                 <Button colorScheme={"secondary"} onClick={() => { window.location.reload(); }}>リセット</Button>
-                <Button colorScheme={"secondary"} onClick={() => { wazaStart() }}>影分身</Button>
             </Flex>
         </Box>
     );
