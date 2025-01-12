@@ -5,20 +5,18 @@ import { Geodesic } from "geographiclib";
 import Compass from "./Compass";
 
 export const GPSContent = () => {
-    const [latitude, setLatitude] = useState(0);
-    const [longitude, setLongitude] = useState(0);
     const [message, setMessage] = useState("");
     const [error, setError] = useState(null);
     const [detectStatus, setDetectStatus] = useState("たぶんいない");
     const [detectColor, setDetectColor] = useState("warning.200");
     const [direction, setDirection] = useState(0);
     const [stopFunction, setStopFunction] = useState(null); // 停止用関数
+    const [oniLat, setOniLat] = useState(0);
+    const [oniLng, setOniLng] = useState(0);
+    const [sinobiLat, setSinobiLat] = useState(0);
+    const [sinobiLng, setSinobiLng] = useState(0);
+    const headdingRef = useRef(0);
     const channelRef = useRef(null);
-    const webLatRef = useRef(0);
-    const webLngRef = useRef(0);
-    const raspLatRef = useRef(0);
-    const raspLngRef = useRef(0);
-    const webDegree = useRef(0);
 
     const init = async () => {
         try {
@@ -34,11 +32,15 @@ export const GPSContent = () => {
 
 
     const GPSDetect = () => {
-        console.log(webLatRef.current);
-        console.log(webLngRef.current);
-        console.log(raspLatRef.current);
-        console.log(raspLngRef.current);
-        const info = calculate(webLatRef.current, webLngRef.current, raspLatRef.current, raspLngRef.current);
+        console.log(oniLat);
+        console.log(oniLng);
+        console.log(sinobiLat);
+        console.log(sinobiLng);
+
+        const deltaLat = Math.abs(oniLat - sinobiLat);
+        const deltaLng = Math.abs(oniLng - sinobiLng);
+
+        const info = calculate(oniLat, oniLng, sinobiLat, sinobiLng);
 
         setMessage("距離: " + info.s12 + " m");
         if (info.s12 <= 10) {
@@ -53,7 +55,7 @@ export const GPSContent = () => {
             NumToDetect(0);
         }
 
-        const relativeHeading = (webDegree.current - info.azi1 + 360) % 360;
+        const relativeHeading = (headdingRef.current - info.azi1 + 360) % 360;
         setDirection(relativeHeading)
     }
 
@@ -105,15 +107,19 @@ export const GPSContent = () => {
 
     const getMessage = (msg) => {
         console.log(msg.data);
-        if (msg.data.lat) {
-            raspLatRef.current = msg.data.lat;
-        }
-        if (msg.data.lon) {
-            raspLngRef.current = msg.data.lon;
+
+        if (msg.data.role){
+            if(msg.data.role == "SINOBi"){
+                setSinobiLat(msg.data.lat);
+                setSinobiLng(msg.data.lon);
+            }else if(msg.data.role == "oni"){
+                setOniLat(msg.data.lat);
+                setOniLng(msg.data.lon);
+            }
         }
 
         if (msg.data == "WAZA") {
-
+            wazaStart();
         }
         if (msg.data == "SAFE") {
             handleStart();
@@ -123,16 +129,18 @@ export const GPSContent = () => {
         }
 
     }
-
+    
+    /*
     const sendMessage = (data) => {
-        if (channelRef.current) {
-            channelRef.current.send(data); // 現在のchannelにデータを送信
+        if (channel) {
+            channel.send(data); // 現在のchannelにデータを送信
             console.log("SEND:" + data);
         } else {
             setError("接続チャンネルが初期化されていません")
             console.error("Channel is not initialized");
         }
     };
+    */
 
     const startSpinning = () => {
         const duration = 30 * 1000; // 30秒
@@ -143,7 +151,7 @@ export const GPSContent = () => {
         // アニメーションを開始
         const runAnimation = () => {
             intervalId = setInterval(() => {
-                setError("忍が影分身の術を使いました");
+                setError("忍が隠れ身の術を使いました");
                 const elapsed = Date.now() - startTime;
                 if (elapsed >= duration) {
                     clearInterval(intervalId); // 30秒経過で停止
@@ -162,6 +170,35 @@ export const GPSContent = () => {
         return () => clearInterval(intervalId);
     };
 
+    const wazaStart = () => {
+        const duration = 30 * 1000; // 30秒
+        const rotationSpeed = 500; // 1回転にかかる時間（ms）
+        const startTime = Date.now();
+        let intervalId;
+
+        // アニメーションを開始
+        const runAnimation = () => {
+            intervalId = setInterval(() => {
+                randomDetectStatus();
+                setError("忍が分身の術を使いました");
+                const elapsed = Date.now() - startTime;
+                if (elapsed >= duration) {
+                    clearInterval(intervalId); // 30秒経過で停止
+                    setError(null);
+                    return;
+                }
+                const newAngle = (elapsed / rotationSpeed) * 360; // 回転角度計算
+                setDirection(newAngle % 360); // 360度でループ
+            }, 16); // 更新間隔（16ms ≈ 60fps）
+        };
+
+        // アニメーションを実行
+        runAnimation();
+
+        // 停止用の関数を返す
+        return () => clearInterval(intervalId);
+    }
+
     const handleStart = () => {
         if (stopFunction) {
             stopFunction(); // 既存の回転を停止
@@ -177,6 +214,7 @@ export const GPSContent = () => {
         }
     };
 
+    /*
     const getLocation = () => {
         if (!navigator.geolocation) {
             setError('ブラウザで位置情報の許可をしてください。');
@@ -186,20 +224,20 @@ export const GPSContent = () => {
             (position) => {
                 setLatitude(position.coords.latitude);
                 setLongitude(position.coords.longitude);
-                webLatRef.current = position.coords.latitude;
-                webLngRef.current = position.coords.longitude;
+                oniLat = position.coords.latitude;
+                oniLng = position.coords.longitude;
                 setError(null);
             },
             (err) => {
                 setError(`Error: ${err.message}`);
             }
         );
-    };
+    };*/
 
     useEffect(() => {
         init();
         const interval = setInterval(() => {
-            sendMessage("GET GPS");
+            //sendMessage("GET GPS");
             getLocation();
             GPSDetect();
 
@@ -207,9 +245,9 @@ export const GPSContent = () => {
 
         const handleOrientation = (event) => {
             const alpha = event.alpha; // 0〜360°: デバイスの真北からの角度
-            webDegree.current = alpha;
+            oniDegree.current = alpha;
             if (alpha !== null) {
-                setHeading(alpha);
+                headdingRef.current = alpha;
             } else {
                 setError('方位センサーがサポートされていません。');
             }
@@ -254,10 +292,12 @@ export const GPSContent = () => {
                 <Center>
                     <Text pb="2" text="xl" fontWeight={"bolder"}>端末状態</Text>
                 </Center>
-                <Text pt="2" text="xl" fontWeight={"bolder"}>現在地</Text>
-                <Flex w="full" gap="md">
-                    <Text >緯度:{FloatToString(latitude)}</Text>
-                    <Text >軽度:{FloatToString(longitude)}</Text>
+                <Text pt="2" text="xl" fontWeight={"bolder"}>鬼</Text>
+                <Flex w="full" gap="sm">
+                    <Text >鬼の緯度:{FloatToString(oniLat)}</Text>
+                    <Text >鬼の経度:{FloatToString(oniLng)}</Text>
+                    <Text >忍の緯度:{FloatToString(sinobiLat)}</Text>
+                    <Text >忍の経度:{FloatToString(sinobiLng)}</Text>
                 </Flex>
                 <Text pt="2" text="xl" fontWeight={"bolder"}>動作状況</Text>
                 {
@@ -269,6 +309,8 @@ export const GPSContent = () => {
             </Box>
             <Flex mt="4" w="full" gap="md" align="center" justify="center">
                 <Button colorScheme={"secondary"} onClick={() => { window.location.reload(); }}>リセット</Button>
+                <Button colorScheme={"secondary"} onClick={() => { wazaStart() }}>影分身</Button>
+                
             </Flex>
         </Box>
     );
