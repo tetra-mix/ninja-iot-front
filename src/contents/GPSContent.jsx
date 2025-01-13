@@ -11,10 +11,15 @@ export const GPSContent = () => {
     const [detectColor, setDetectColor] = useState("warning.200");
     const [direction, setDirection] = useState(0);
     const [stopFunction, setStopFunction] = useState(null); // 停止用関数
+    const [distance, setDistance] = useState(0);
     const [oniLat, setOniLat] = useState(0);
     const [oniLng, setOniLng] = useState(0);
     const [sinobiLat, setSinobiLat] = useState(0);
     const [sinobiLng, setSinobiLng] = useState(0);
+    const oniLatRef  = useState(0);
+    const oniLngRef  = useState(0);
+    const sinobiLatRef = useState(0);
+    const sinobiLngRef = useState(0);
     const headdingRef = useRef(0);
     const channelRef = useRef(null);
 
@@ -32,15 +37,17 @@ export const GPSContent = () => {
 
 
     const GPSDetect = () => {
-        console.log(oniLat);
-        console.log(oniLng);
-        console.log(sinobiLat);
-        console.log(sinobiLng);
+        console.log(oniLatRef.current);
+        console.log(oniLngRef.current);
+        console.log(sinobiLatRef.current);
+        console.log(sinobiLngRef.current);
 
-        const distance = getDistance(oniLat, oniLng, sinobiLat, sinobiLng);
-        const info = calculate(oniLat, oniLng, sinobiLat, sinobiLng);
+        const distance = getDistance(oniLatRef.current, oniLngRef.current, sinobiLatRef.current, sinobiLngRef.current);
+        console.log(distance);
+        const info = calculate(oniLatRef.current, oniLngRef.current, sinobiLatRef.current, sinobiLngRef.current);
 
-        setMessage("距離: " + distance + " m");
+        setMessage("距離: " + FloatToString(distance) + " m");
+
         if (distance <= 10) {
             NumToDetect(4);
         } else if (distance <= 20) {
@@ -111,15 +118,32 @@ export const GPSContent = () => {
     }
 
     const getMessage = (msg) => {
+        //console.log(msg.data);
+        //console.log(msg.data.time);
         console.log(msg.data);
+        if (typeof (msg.data) === "number" && !isNaN(msg.data)) {
+            setDistance(msg.data);
+        }
 
         if (msg.data.role){
             if(msg.data.role == "sinobi"){
-                setSinobiLat(msg.data.lat);
-                setSinobiLng(msg.data.lon);
+                if(msg.data.lat){
+                    setSinobiLat(msg.data.lat);
+                    sinobiLatRef.current = msg.data.lat;
+                }
+                if(msg.data.lon){
+                    setSinobiLng(msg.data.lon);
+                    sinobiLngRef.current = msg.data.lon;
+                }
             }else if(msg.data.role == "oni"){
-                setOniLat(msg.data.lat);
-                setOniLng(msg.data.lon);
+                if(msg.data.lat){
+                    setOniLat(msg.data.lat);
+                    oniLatRef.current = msg.data.lat;
+                }
+                if(msg.data.lon){
+                    setOniLng(msg.data.lon);
+                    oniLngRef.current = msg.data.lon;
+                }
             }
         }
 
@@ -148,7 +172,7 @@ export const GPSContent = () => {
     */
 
     const startSpinning = () => {
-        const duration = 30 * 1000; // 30秒
+        const duration = 15 * 1000; // 15秒
         const rotationSpeed = 500; // 1回転にかかる時間（ms）
         const startTime = Date.now();
         let intervalId;
@@ -176,7 +200,7 @@ export const GPSContent = () => {
     };
 
     const wazaStart = () => {
-        const duration = 30 * 1000; // 30秒
+        const duration = 20 * 1000; // 20秒
         const rotationSpeed = 500; // 1回転にかかる時間（ms）
         const startTime = Date.now();
         let intervalId;
@@ -188,7 +212,7 @@ export const GPSContent = () => {
                 setError("忍が分身の術を使いました");
                 const elapsed = Date.now() - startTime;
                 if (elapsed >= duration) {
-                    clearInterval(intervalId); // 30秒経過で停止
+                    clearInterval(intervalId); // 20秒経過で停止
                     setError(null);
                     return;
                 }
@@ -240,11 +264,26 @@ export const GPSContent = () => {
     };*/
 
     useEffect(() => {
+        setMessage("距離: " + FloatToString(distance) + " m");
+        if (distance <= 10) {
+            NumToDetect(4);
+        } else if (distance <= 20) {
+            NumToDetect(3);
+        } else if (distance <= 30) {
+            NumToDetect(2);
+        } else if (distance <= 40) {
+            NumToDetect(1);
+        } else {
+            NumToDetect(0);
+        }
+    }, [distance]);
+
+    useEffect(() => {
         init();
         const interval = setInterval(() => {
             //sendMessage("GET GPS");
             //getLocation();
-            GPSDetect();
+            //GPSDetect();
 
         }, 4000);
 
@@ -299,13 +338,13 @@ export const GPSContent = () => {
                 </Center>
                 <Flex w="full" gap="sm">
                     <Text pr="4" text="xl" fontWeight={"bolder"}>鬼</Text>
-                    <Text >緯度:{FloatToString(oniLat)}</Text>
-                    <Text >経度:{FloatToString(oniLng)}</Text>
+                    <Text >緯度:34.74504</Text>
+                    <Text >経度:136.52495</Text>
                 </Flex>
                 <Flex w="full" gap="sm">
                     <Text pr="4" text="xl" fontWeight={"bolder"}>忍</Text>
-                    <Text >緯度:{FloatToString(sinobiLat)}</Text>
-                    <Text >経度:{FloatToString(sinobiLng)}</Text>
+                    <Text >緯度:34.74532</Text>
+                    <Text >経度:136.52447</Text>
                 </Flex>
                 <Text pt="2" text="xl" fontWeight={"bolder"}>動作状況</Text>
                 {
