@@ -11,9 +11,9 @@ export const config = {
 const customConfig = extendConfig(config)
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+  <>
     <UIProvider config={customConfig}>
       <App />
     </UIProvider>
-  </StrictMode>,
+  </>,
 )
