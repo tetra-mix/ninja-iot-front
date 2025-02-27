@@ -1,6 +1,7 @@
 import { useState, useLayoutEffect } from 'react'
 import { Container, Button, useColorMode, } from "@yamada-ui/react"
 import { GPSContent } from './contents/GPSContent';
+import { BluetoothBeacon } from './contents/BeaconTest';
 import { Top } from './contents/Top';
 import { LoadView } from './atom/LoadView';
 import { Header } from './atom/Header';
@@ -34,6 +35,7 @@ function App() {
           flag == 2 ? <GPSContent /> : <></>
         }
       </Container>
+      <BluetoothBeacon />
       <Footer />
     </>
   )
