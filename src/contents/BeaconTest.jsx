@@ -22,10 +22,8 @@ export const BluetoothBeacon = () => {
 
     const startScan = async () => {
         try {
-            const scan = await navigator.bluetooth.requestLEScan({
-                filters: [{ name: ["NINJAIOT_SINOBI"] }],
-                keepRepeatedDevices: true,
-            });
+            const scan = await navigator.bluetooth.requestLEScan({ acceptAllAdvertisements: true });
+
 
             navigator.bluetooth.addEventListener('advertisementreceived', event => {
                 const { rssi } = event;
